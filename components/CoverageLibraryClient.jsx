@@ -80,8 +80,8 @@ export function CoverageLibraryClient({ rows, advisorName, advisorEmail }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 6 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>보장 설명 관리</h1>
-            <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--semantic-label-alternative)', maxWidth: 520, textWrap: 'pretty' }}>
-              설계안을 만들 때마다 담보 설명이 여기에 누적됩니다(같은 담보명은 중복 추가되지 않아요). 고객 화면에 보이는 “왜 필요한가요·어떻게 받나요” 문구를 수정하세요.
+            <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--semantic-label-alternative)', maxWidth: 540, textWrap: 'pretty' }}>
+              설계안을 만들 때마다 담보 설명이 여기에 누적됩니다(같은 담보명은 중복 추가되지 않아요). 여기서 고친 “왜 필요한가요·어떻게 받나요” 문구는 <b style={{ color: 'var(--semantic-label-neutral)', fontWeight: 600 }}>앞으로 만드는 설계안에 자동 적용</b>됩니다. (이미 만든 설계안은 그대로 유지돼요.)
             </p>
           </div>
         </div>
