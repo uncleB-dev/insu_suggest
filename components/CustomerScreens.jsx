@@ -12,7 +12,7 @@ const useS = useState, useR = useRef;
 const CUST = D.PLAN_CUSTOMER;
 
 // ── 화면 5: 인증 게이트 ──
-export function GateScreen({ onPass, onVerify, authType }) {
+export function GateScreen({ onPass, onVerify, authType, showStatusBar = true }) {
   const auth = D.PLAN_AUTH || { type: 'birth', value: '130506' };
   const isCode = (authType || auth.type) === 'code';
   const [val, setVal] = useS('');
@@ -47,7 +47,7 @@ export function GateScreen({ onPass, onVerify, authType }) {
 
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--semantic-background-normal-normal)' }}>
-      <PhoneStatusBar />
+      {showStatusBar ? <PhoneStatusBar /> : <div style={{ height: 'env(safe-area-inset-top, 12px)', flexShrink: 0 }} />}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 26px 40px' }}>
         <div style={{ width: 56, height: 56, borderRadius: 18, background: 'var(--brand-gradient-deep)', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)', marginBottom: 22 }} />
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--semantic-primary-normal)', marginBottom: 6 }}>맞춤 보장 설계안</div>
@@ -114,7 +114,7 @@ export function LockIcon({ size = 14 }) {
 }
 
 // ── 화면 6: 설계 메인 (모바일) ──
-export function PlannerMobile({ P, memo, setMemo, onSave, customer = CUST, categories = D.PLAN_CATEGORIES, agentComment = D.PLAN_AGENT_COMMENT }) {
+export function PlannerMobile({ P, memo, setMemo, onSave, customer = CUST, categories = D.PLAN_CATEGORIES, agentComment = D.PLAN_AGENT_COMMENT, showStatusBar = true }) {
   const [tab, setTab] = useS('all');
   const cats = tab === 'all' ? categories : categories.filter(c => c.key === tab);
 
@@ -122,7 +122,7 @@ export function PlannerMobile({ P, memo, setMemo, onSave, customer = CUST, categ
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--semantic-background-normal-alternative)' }}>
       {/* Header */}
       <div style={{ flexShrink: 0, background: 'linear-gradient(135deg, #005EEB 0%, #2F86FF 100%)', color: '#fff', paddingBottom: 16 }}>
-        <PhoneStatusBar dark />
+        {showStatusBar ? <PhoneStatusBar dark /> : <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 18px)', flexShrink: 0 }} />}
         <div style={{ padding: '4px 20px 0' }}>
           <div style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.85 }}>{SERVICE_NAME}</div>
           <h1 style={{ margin: '4px 0 0', fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em' }}>{customer.maskedName}님 맞춤 보장 설계</h1>
@@ -203,10 +203,10 @@ export function DiffPillCompact({ P }) {
 }
 
 // ── 화면 7: 저장 완료 ──
-export function SavedScreen({ P, memo, onEdit, onClose, agentComment = D.PLAN_AGENT_COMMENT }) {
+export function SavedScreen({ P, memo, onEdit, onClose, agentComment = D.PLAN_AGENT_COMMENT, showStatusBar = true }) {
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--semantic-background-normal-normal)' }}>
-      <PhoneStatusBar />
+      {showStatusBar ? <PhoneStatusBar /> : <div style={{ height: 'env(safe-area-inset-top, 12px)', flexShrink: 0 }} />}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 24px 30px' }}>
         <div style={{ width: 72, height: 72, borderRadius: 999, background: 'rgba(0,191,64,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22, animation: 'pop .4s cubic-bezier(.2,.9,.3,1.2)' }}>
           <Icon name="check" size={38} color="var(--atomic-green-40)" />

@@ -49,7 +49,7 @@ export function ClientPlanner({ slug, authType, invalid }) {
   if (!plan) {
     return (
       <Frame>
-        <GateScreen authType={authType} onVerify={onVerify} onPass={() => setStage('planner')} />
+        <GateScreen authType={authType} onVerify={onVerify} onPass={() => setStage('planner')} showStatusBar={false} />
         {toast && <ToastAuto {...toast} onDone={() => setToast(null)} bottom={96} />}
       </Frame>
     );
@@ -108,10 +108,11 @@ function Loaded({ slug, code, plan, supabase, stage, setStage, toast, setToast }
           customer={customer}
           categories={categories}
           agentComment={plan.agentComment}
+          showStatusBar={false}
         />
       )}
       {stage === 'saved' && (
-        <SavedScreen P={P} memo={memo} agentComment={plan.agentComment} onEdit={() => setStage('planner')} onClose={() => setStage('planner')} />
+        <SavedScreen P={P} memo={memo} agentComment={plan.agentComment} showStatusBar={false} onEdit={() => setStage('planner')} onClose={() => setStage('planner')} />
       )}
       {modal && stage === 'planner' && (
         <SaveModal P={P} memo={memo} onClose={() => setModal(false)} onConfirm={confirmSave} />
