@@ -1,0 +1,235 @@
+/* ============================================================
+   Montage (Wanted Lab WDS) — Colors & Type Tokens
+   Source: github.com/wanteddev/montage-web
+   Light theme by default. Add .dark on a parent to switch.
+   ============================================================ */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-jp-dynamic-subset.min.css');
+
+:root {
+  /* ─── Atomic palette (raw color scales) ─────────────────── */
+  --atomic-common-0:   #000000;
+  --atomic-common-100: #ffffff;
+
+  /* Blue — brand primary */
+  --atomic-blue-10: #001536; --atomic-blue-20: #002966; --atomic-blue-30: #003E9C;
+  --atomic-blue-40: #0054D1; --atomic-blue-45: #005EEB; --atomic-blue-50: #0066FF;
+  --atomic-blue-55: #1A75FF; --atomic-blue-60: #3385FF; --atomic-blue-65: #4F95FF;
+  --atomic-blue-70: #69A5FF; --atomic-blue-80: #9EC5FF; --atomic-blue-90: #C9DEFE;
+  --atomic-blue-95: #EAF2FE; --atomic-blue-99: #F7FBFF;
+
+  /* Cool neutral — labels, surfaces, lines */
+  --atomic-coolNeutral-5:  #0F0F10; --atomic-coolNeutral-7:  #141415;
+  --atomic-coolNeutral-10: #171719; --atomic-coolNeutral-15: #1B1C1E;
+  --atomic-coolNeutral-17: #212225; --atomic-coolNeutral-20: #292A2D;
+  --atomic-coolNeutral-22: #2E2F33; --atomic-coolNeutral-23: #333438;
+  --atomic-coolNeutral-25: #37383C; --atomic-coolNeutral-30: #46474C;
+  --atomic-coolNeutral-40: #5A5C63; --atomic-coolNeutral-50: #70737C;
+  --atomic-coolNeutral-60: #878A93; --atomic-coolNeutral-70: #989BA2;
+  --atomic-coolNeutral-80: #AEB0B6; --atomic-coolNeutral-90: #C2C4C8;
+  --atomic-coolNeutral-95: #DBDCDF; --atomic-coolNeutral-96: #E1E2E4;
+  --atomic-coolNeutral-97: #EAEBEC; --atomic-coolNeutral-98: #F4F4F5;
+  --atomic-coolNeutral-99: #F7F7F8;
+
+  /* Neutral (warm) — shadows source */
+  --atomic-neutral-10: #171717;
+
+  /* Status */
+  --atomic-red-40:    #E52222; --atomic-red-50:    #FF4242; --atomic-red-60: #FF6363;
+  --atomic-green-40:  #009632; --atomic-green-50:  #00BF40; --atomic-green-60: #1ED45A;
+  --atomic-orange-39: #D17600; --atomic-orange-50: #FF9200; --atomic-orange-60: #FFA938;
+
+  /* Accent backgrounds (50) */
+  --atomic-redOrange-48: #F55A00; --atomic-redOrange-50: #FF5E00;
+  --atomic-lime-37: #429E00;     --atomic-lime-50: #58CF04;
+  --atomic-cyan-40: #0098B2;     --atomic-cyan-50: #00BDDE;
+  --atomic-lightBlue-40: #008DCF;--atomic-lightBlue-50: #00AEFF;
+  --atomic-violet-45: #5B37ED;   --atomic-violet-50: #6541F2;
+  --atomic-purple-40: #AD36E3;   --atomic-purple-50: #CB59FF;
+  --atomic-pink-46: #E846CD;     --atomic-pink-50: #F553DA;
+
+  /* ─── Semantic (light) ──────────────────────────────────── */
+  --semantic-static-white: #ffffff;
+  --semantic-static-black: #000000;
+
+  --semantic-primary-normal: var(--atomic-blue-50);
+  --semantic-primary-strong: var(--atomic-blue-45);
+  --semantic-primary-heavy:  var(--atomic-blue-40);
+
+  /* Foreground (text/icon) */
+  --semantic-label-normal:      var(--atomic-coolNeutral-10);
+  --semantic-label-strong:      #000;
+  --semantic-label-neutral:     rgba(46, 47, 51, 0.88);   /* coolNeutral-22 @ 88% */
+  --semantic-label-alternative: rgba(55, 56, 60, 0.61);   /* coolNeutral-25 @ 61% */
+  --semantic-label-assistive:   rgba(55, 56, 60, 0.28);
+  --semantic-label-disable:     rgba(55, 56, 60, 0.16);
+
+  /* Backgrounds */
+  --semantic-background-normal-normal:        #ffffff;
+  --semantic-background-normal-alternative:   var(--atomic-coolNeutral-99);
+  --semantic-background-elevated-normal:      #ffffff;
+  --semantic-background-elevated-alternative: var(--atomic-coolNeutral-99);
+  --semantic-background-transparent-normal:        rgba(255,255,255, 0.08);
+  --semantic-background-transparent-alternative:   rgba(255,255,255, 0.28);
+
+  /* Interaction */
+  --semantic-interaction-inactive: var(--atomic-coolNeutral-70);
+  --semantic-interaction-disable:  var(--atomic-coolNeutral-98);
+
+  /* Lines */
+  --semantic-line-normal-normal:      rgba(112, 115, 124, 0.22); /* cn-50 @ 22 */
+  --semantic-line-normal-neutral:     rgba(112, 115, 124, 0.16);
+  --semantic-line-normal-alternative: rgba(112, 115, 124, 0.08);
+  --semantic-line-solid-normal:       var(--atomic-coolNeutral-96);
+  --semantic-line-solid-neutral:      var(--atomic-coolNeutral-97);
+  --semantic-line-solid-alternative:  var(--atomic-coolNeutral-98);
+
+  /* Status */
+  --semantic-status-positive:   var(--atomic-green-50);
+  --semantic-status-cautionary: var(--atomic-orange-50);
+  --semantic-status-negative:   var(--atomic-red-50);
+
+  /* Fill (neutral overlays) */
+  --semantic-fill-normal:      rgba(112, 115, 124, 0.08);
+  --semantic-fill-strong:      rgba(112, 115, 124, 0.16);
+  --semantic-fill-alternative: rgba(112, 115, 124, 0.05);
+
+  /* Inverse */
+  --semantic-inverse-primary:    var(--atomic-blue-60);
+  --semantic-inverse-background: var(--atomic-coolNeutral-15);
+  --semantic-inverse-label:      var(--atomic-coolNeutral-99);
+
+  /* Material (overlays/dim) */
+  --semantic-material-dimmer: rgba(23, 23, 25, 0.52);
+
+  /* Elevation (shadows) — uses atomic-neutral-10 at various opacities */
+  --semantic-shadow-xsmall: 0px 1px 2px -1px rgba(23,23,23,0.10);
+  --semantic-shadow-small:  0px 2px 4px -2px rgba(23,23,23,0.06), 0px 4px 6px -1px rgba(23,23,23,0.06);
+  --semantic-shadow-medium: 0px 4px 6px -2px rgba(23,23,23,0.07), 0px 10px 15px -3px rgba(23,23,23,0.07);
+  --semantic-shadow-large:  0px 6px 10px -4px rgba(23,23,23,0.08), 0px 16px 24px -6px rgba(23,23,23,0.08);
+  --semantic-shadow-xlarge: 0px 10px 15px -5px rgba(23,23,23,0.10), 0px 24px 38px -10px rgba(23,23,23,0.12);
+  --semantic-shadow-spread-small:  0px 0px 60px 0px rgba(23,23,23,0.10);
+  --semantic-shadow-spread-medium: 0px 15px 75px 0px rgba(23,23,23,0.16);
+
+  /* ─── Brand gradient (signature symbol palette) ──────────── */
+  --brand-gradient-blue:   conic-gradient(#2AB8FF 0deg, #20BAFF 180deg, #20BAFF 270deg, #2AB8FF 360deg);
+  --brand-gradient-deep:   conic-gradient(#717EFF 0deg, #4E76FF 90deg, #1368FF 180deg, #1A6AFF 225deg, #316FFF 270deg, #5076FF 315deg, #717EFF 360deg);
+  --brand-gradient-sky:    conic-gradient(#0091FF 0deg, #0096FF 90deg, #0089FF 135deg, #007EFF 180deg, #0075FF 225deg, #006EFF 270deg, #0091FF 360deg);
+  --brand-gradient-coral:  conic-gradient(#FF5A00 0deg, #FF5E0F 90deg, #FF7259 180deg, #FF8EBD 270deg, #FF9FFE 315deg, #FF5A00 360deg);
+  --brand-gradient-violet: conic-gradient(#6DB1FF 0deg, #7BB0FF 45deg, #8FADFF 90deg, #B4A8FF 180deg, #6DB1FF 360deg);
+  --brand-spectrum: linear-gradient(90deg,
+    #697DFF 0%, #757FFF 2.5%, #CF94FF 24%, #ED9BFF 29%, #FE9FFF 34%,
+    #FF99E6 46%, #FF859C 58%, #FF786E 63%, #FF5A00 72%, #FF5A00 100%);
+
+  /* ─── Spacing scale (pixels) ─────────────────────────────── */
+  --spacing-0:   0px; --spacing-1:  1px; --spacing-2:  2px; --spacing-4:  4px;
+  --spacing-6:   6px; --spacing-8:  8px; --spacing-10: 10px;--spacing-12: 12px;
+  --spacing-14: 14px; --spacing-16: 16px; --spacing-20: 20px; --spacing-24: 24px;
+  --spacing-32: 32px; --spacing-40: 40px; --spacing-48: 48px; --spacing-56: 56px;
+  --spacing-64: 64px; --spacing-72: 72px; --spacing-80: 80px;
+
+  /* ─── Radii (used across components) ─────────────────────── */
+  --radius-xs: 6px;   /* chip xsmall */
+  --radius-sm: 8px;   /* chip / button small */
+  --radius-md: 10px;  /* button medium / chip large */
+  --radius-lg: 12px;  /* button large / text field */
+  --radius-xl: 16px;  /* card */
+  --radius-2xl: 20px; /* hero card */
+  --radius-pill: 999px;
+
+  /* ─── Breakpoints (for reference) ────────────────────────── */
+  --bp-xs: 0px; --bp-sm: 768px; --bp-md: 992px; --bp-lg: 1200px; --bp-xl: 1600px;
+
+  /* ─── Font families ──────────────────────────────────────── */
+  --font-sans: 'Pretendard', 'Pretendard JP', -apple-system, BlinkMacSystemFont,
+               'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* ─── Semantic — Dark mode ─────────────────────────────────── */
+.dark, [data-theme='dark'] {
+  --semantic-primary-normal: var(--atomic-blue-60);
+  --semantic-primary-strong: var(--atomic-blue-55);
+  --semantic-primary-heavy:  var(--atomic-blue-50);
+
+  --semantic-label-normal:      var(--atomic-coolNeutral-99);
+  --semantic-label-strong:      #fff;
+  --semantic-label-neutral:     rgba(194, 196, 200, 0.88);
+  --semantic-label-alternative: rgba(174, 176, 182, 0.61);
+  --semantic-label-assistive:   rgba(174, 176, 182, 0.28);
+  --semantic-label-disable:     rgba(152, 155, 162, 0.16);
+
+  --semantic-background-normal-normal:        var(--atomic-coolNeutral-15);
+  --semantic-background-normal-alternative:   var(--atomic-coolNeutral-5);
+  --semantic-background-elevated-normal:      var(--atomic-coolNeutral-17);
+  --semantic-background-elevated-alternative: var(--atomic-coolNeutral-7);
+  --semantic-background-transparent-normal:        rgba(33, 34, 37, 0.61);
+  --semantic-background-transparent-alternative:   rgba(33, 34, 37, 0.61);
+
+  --semantic-interaction-inactive: var(--atomic-coolNeutral-40);
+  --semantic-interaction-disable:  var(--atomic-coolNeutral-22);
+
+  --semantic-line-normal-normal:      rgba(112, 115, 124, 0.32);
+  --semantic-line-normal-neutral:     rgba(112, 115, 124, 0.28);
+  --semantic-line-normal-alternative: rgba(112, 115, 124, 0.22);
+  --semantic-line-solid-normal:       var(--atomic-coolNeutral-25);
+  --semantic-line-solid-neutral:      var(--atomic-coolNeutral-23);
+  --semantic-line-solid-alternative:  var(--atomic-coolNeutral-22);
+
+  --semantic-status-positive:   var(--atomic-green-60);
+  --semantic-status-cautionary: var(--atomic-orange-60);
+  --semantic-status-negative:   var(--atomic-red-60);
+
+  --semantic-fill-normal:      rgba(112, 115, 124, 0.22);
+  --semantic-fill-strong:      rgba(112, 115, 124, 0.28);
+  --semantic-fill-alternative: rgba(112, 115, 124, 0.12);
+
+  --semantic-inverse-primary:    var(--atomic-blue-50);
+  --semantic-inverse-background: #ffffff;
+  --semantic-inverse-label:      var(--atomic-coolNeutral-10);
+
+  --semantic-material-dimmer: rgba(23, 23, 25, 0.74);
+}
+
+/* ============================================================
+   Typography
+   Scale: rem-based, Pretendard, tight letter-spacing on display
+   ============================================================ */
+.wds-typo,
+.wds-display1, .wds-display2, .wds-display3,
+.wds-title1, .wds-title2, .wds-title3,
+.wds-heading1, .wds-heading2,
+.wds-headline1, .wds-headline2,
+.wds-body1, .wds-body1-reading, .wds-body2, .wds-body2-reading,
+.wds-label1, .wds-label1-reading, .wds-label2,
+.wds-caption1, .wds-caption2 {
+  font-family: var(--font-sans);
+  color: var(--semantic-label-normal);
+  font-feature-settings: 'ss01', 'tnum';
+  font-weight: 500;
+}
+
+.wds-display1 { font-size: 3.5rem;   line-height: 4.5rem;  letter-spacing: -0.0319em; font-weight: 700; }
+.wds-display2 { font-size: 2.5rem;   line-height: 3.25rem; letter-spacing: -0.0282em; font-weight: 700; }
+.wds-display3 { font-size: 2.25rem;  line-height: 3rem;    letter-spacing: -0.027em;  font-weight: 700; }
+.wds-title1   { font-size: 2rem;     line-height: 2.75rem; letter-spacing: -0.0253em; font-weight: 700; }
+.wds-title2   { font-size: 1.75rem;  line-height: 2.375rem;letter-spacing: -0.0236em; font-weight: 700; }
+.wds-title3   { font-size: 1.5rem;   line-height: 2rem;    letter-spacing: -0.023em;  font-weight: 700; }
+.wds-heading1 { font-size: 1.375rem; line-height: 1.875rem;letter-spacing: -0.0194em; font-weight: 600; }
+.wds-heading2 { font-size: 1.25rem;  line-height: 1.75rem; letter-spacing: -0.012em;  font-weight: 600; }
+.wds-headline1{ font-size: 1.125rem; line-height: 1.625rem;letter-spacing: -0.002em;  font-weight: 600; }
+.wds-headline2{ font-size: 1.0625rem;line-height: 1.5rem;  letter-spacing: 0;         font-weight: 600; }
+.wds-body1    { font-size: 1rem;     line-height: 1.5rem;  letter-spacing: 0.0057em;  font-weight: 400; }
+.wds-body1-reading { font-size: 1rem; line-height: 1.625rem; letter-spacing: 0.0057em; font-weight: 400; }
+.wds-body2    { font-size: 0.9375rem;line-height: 1.375rem;letter-spacing: 0.0096em;  font-weight: 400; }
+.wds-body2-reading { font-size: 0.9375rem; line-height: 1.5rem; letter-spacing: 0.0096em; font-weight: 400; }
+.wds-label1   { font-size: 0.875rem; line-height: 1.25rem; letter-spacing: 0.0145em;  font-weight: 500; }
+.wds-label1-reading { font-size: 0.875rem; line-height: 1.375rem; letter-spacing: 0.0145em; font-weight: 500; }
+.wds-label2   { font-size: 0.8125rem;line-height: 1.125rem;letter-spacing: 0.0194em;  font-weight: 500; }
+.wds-caption1 { font-size: 0.75rem;  line-height: 1rem;    letter-spacing: 0.0252em;  font-weight: 500; }
+.wds-caption2 { font-size: 0.6875rem;line-height: 0.875rem;letter-spacing: 0.0311em;  font-weight: 500; }
+
+.wds-w-regular { font-weight: 400; }
+.wds-w-medium  { font-weight: 500; }
+.wds-w-bold    { font-weight: 700; }
