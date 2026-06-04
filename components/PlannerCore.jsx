@@ -37,39 +37,46 @@ export function CoverageRow({ c, premium, onToggle, onAmount, dense }) {
       boxShadow: off ? 'inset 0 0 0 1px var(--semantic-line-normal-alternative)' : 'inset 0 0 0 1px var(--semantic-line-normal-neutral)',
       padding: dense ? '9px 11px' : '11px 13px', transition: 'box-shadow .2s ease',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      {/* 1줄: 토글 + 담보명 + 설명 버튼 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ opacity: c.required ? 0.55 : 1, pointerEvents: c.required ? 'none' : 'auto', flexShrink: 0 }}>
           <Switch checked={c.on} onChange={onToggle} />
         </div>
-        <div style={{ flex: '1 1 130px', minWidth: 0, opacity: off ? 0.5 : 1 }}>
+        <div style={{ flex: 1, minWidth: 0, opacity: off ? 0.5 : 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</span>
             {c.required && <Badge tone="neutral">필수</Badge>}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+        <button onClick={() => setOpen(o => !o)} style={{
+          height: 30, padding: '0 12px', borderRadius: 8, border: 'none', flexShrink: 0, cursor: 'pointer',
+          fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit',
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          background: open ? 'var(--semantic-primary-normal)' : '#fff',
+          color: open ? '#fff' : 'var(--semantic-primary-normal)',
+          boxShadow: open ? 'none' : 'inset 0 0 0 1px rgba(0,102,255,0.36)',
+          transition: 'background .2s ease, color .2s ease, box-shadow .2s ease',
+        }}>
+          {open ? '닫기' : '설명'}
+        </button>
+      </div>
+
+      {/* 2줄: 보장금액 · 월 보험료 (라벨 포함) — 담보명 아래 정렬 */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginTop: 11, paddingLeft: 50 }}>
+        <div style={{ opacity: off ? 0.55 : 1 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--semantic-label-alternative)', marginBottom: 5 }}>보장금액</div>
           {c.amount != null ? (
-            <AmountField value={c.amount} min={c.min} max={c.max} step={c.step} unitLabel={c.unitLabel || '만원'} onChange={onAmount} disabled={off} width={132} />
+            <AmountField value={c.amount} min={c.min} max={c.max} step={c.step} unitLabel={c.unitLabel || '만원'} onChange={onAmount} disabled={off} width={150} />
           ) : (
-            <span style={{ fontSize: 12, color: 'var(--semantic-label-alternative)', width: 132, textAlign: 'center' }}>금액 해당 없음</span>
+            <div style={{ height: 36, display: 'flex', alignItems: 'center', fontSize: 12.5, color: 'var(--semantic-label-alternative)' }}>금액 조정 없음</div>
           )}
-          <div style={{ width: 86, textAlign: 'right', flexShrink: 0 }}>
-            <span style={{ fontSize: 15, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: off ? 'var(--semantic-label-assistive)' : 'var(--semantic-label-normal)' }}>
-              {D.fmtWon(premium)}
-            </span>
-            <span style={{ fontSize: 11, color: 'var(--semantic-label-alternative)', marginLeft: 2 }}>원</span>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--semantic-label-alternative)', marginBottom: 5 }}>월 보험료</div>
+          <div style={{ height: 36, display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', gap: 2 }}>
+            <span style={{ fontSize: 17, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: off ? 'var(--semantic-label-assistive)' : 'var(--semantic-label-normal)' }}>{D.fmtWon(premium)}</span>
+            <span style={{ fontSize: 12, color: 'var(--semantic-label-alternative)' }}>원</span>
           </div>
-          <button onClick={() => setOpen(o => !o)} style={{
-            height: 32, padding: '0 13px', borderRadius: 8, border: 'none', flexShrink: 0, cursor: 'pointer',
-            fontSize: 12.5, fontWeight: 700, fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            background: open ? 'var(--semantic-primary-normal)' : '#fff',
-            color: open ? '#fff' : 'var(--semantic-primary-normal)',
-            boxShadow: open ? 'none' : 'inset 0 0 0 1px rgba(0,102,255,0.36)',
-            transition: 'background .2s ease, color .2s ease, box-shadow .2s ease',
-          }}>
-            {open ? '닫기' : '설명'}
-          </button>
         </div>
       </div>
 

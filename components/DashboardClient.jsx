@@ -21,11 +21,11 @@ export function DashboardClient({ plans, advisorName, advisorEmail }) {
     <>
       <DashboardScreen
         plans={plans}
-        hideManager
         advisorName={advisorName}
         advisorEmail={advisorEmail}
         onNew={() => router.push('/admin/new')}
         onOpen={(p) => router.push(`/admin/${p.id}`)}
+        onManage={() => router.push('/admin/coverages')}
         onLogout={logout}
         setToast={setToast}
       />

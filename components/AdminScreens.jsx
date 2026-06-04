@@ -96,7 +96,7 @@ export function LoginScreen({ onLogin, onAuth, defaultEmail = 'planner@agency.co
 }
 
 // ── 화면 2: 대시보드 ──
-export function DashboardScreen({ onNew, onOpen, setToast, plans = D.ADMIN_PLANS, hideManager = false, onLogout, advisorName, advisorEmail }) {
+export function DashboardScreen({ onNew, onOpen, setToast, plans = D.ADMIN_PLANS, hideManager = false, onManage, onLogout, advisorName, advisorEmail }) {
   const [q, setQ] = useS('');
   const [filter, setFilter] = useS('all');
   const [mgr, setMgr] = useS(false);
@@ -118,7 +118,7 @@ export function DashboardScreen({ onNew, onOpen, setToast, plans = D.ADMIN_PLANS
       <div style={{ maxWidth: 1160, margin: '0 auto', padding: '28px 28px 64px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 18px' }}>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>내 설계안</h1>
-          {!hideManager && <Button size="small" variant="outlined" color="assistive" leadingContent={<Icon name="book" size={16} />} onClick={() => setMgr(true)}>보장 설명 관리</Button>}
+          {!hideManager && <Button size="small" variant="outlined" color="assistive" leadingContent={<Icon name="book" size={16} />} onClick={() => (onManage ? onManage() : setMgr(true))}>보장 설명 관리</Button>}
         </div>
 
         {/* Stat cards */}
