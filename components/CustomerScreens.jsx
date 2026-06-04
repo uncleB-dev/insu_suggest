@@ -12,9 +12,9 @@ const useS = useState, useR = useRef;
 const CUST = D.PLAN_CUSTOMER;
 
 // ── 화면 5: 인증 게이트 ──
-export function GateScreen({ onPass }) {
+export function GateScreen({ onPass, onVerify, authType }) {
   const auth = D.PLAN_AUTH || { type: 'birth', value: '130506' };
-  const isCode = auth.type === 'code';
+  const isCode = (authType || auth.type) === 'code';
   const [val, setVal] = useS('');
   const [err, setErr] = useS('');
   const [attempts, setAttempts] = useS(0);
@@ -22,17 +22,26 @@ export function GateScreen({ onPass }) {
   const locked = attempts >= 5;
   const ok = val.length === 6;
 
-  function submit() {
+  function fail() {
+    const a = attempts + 1; setAttempts(a);
+    const msg = isCode ? '접속 코드가 일치하지 않습니다.' : '생년월일이 일치하지 않습니다.';
+    setErr(a >= 5 ? '시도 횟수를 초과했어요. 잠시 후 다시 시도해 주세요.' : `${msg} (${a}/5)`);
+  }
+
+  async function submit() {
     if (!ok || loading || locked) return;
     setLoading(true);
+    if (onVerify) {
+      const res = await onVerify(val);
+      setLoading(false);
+      if (res && res.ok) onPass();
+      else fail();
+      return;
+    }
     setTimeout(() => {
       setLoading(false);
-      if (val === auth.value) { onPass(); }
-      else {
-        const a = attempts + 1; setAttempts(a);
-        const msg = isCode ? '접속 코드가 일치하지 않습니다.' : '생년월일이 일치하지 않습니다.';
-        setErr(a >= 5 ? '시도 횟수를 초과했어요. 잠시 후 다시 시도해 주세요.' : `${msg} (${a}/5)`);
-      }
+      if (val === auth.value) onPass();
+      else fail();
     }, 700);
   }
 
@@ -54,7 +63,7 @@ export function GateScreen({ onPass }) {
 
         <div style={{ minHeight: 22, marginTop: 10 }}>
           {err && <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 600, color: 'var(--semantic-status-negative)' }}><Icon name="close" size={14} />{err}</div>}
-          {!err && <div style={{ fontSize: 12, color: 'var(--semantic-label-assistive)' }}>데모: <b style={{ color: 'var(--semantic-label-alternative)' }}>{auth.value}</b> 입력 시 진입</div>}
+          {!err && !onVerify && <div style={{ fontSize: 12, color: 'var(--semantic-label-assistive)' }}>데모: <b style={{ color: 'var(--semantic-label-alternative)' }}>{auth.value}</b> 입력 시 진입</div>}
         </div>
 
         <div style={{ marginTop: 16 }}>
@@ -105,9 +114,9 @@ export function LockIcon({ size = 14 }) {
 }
 
 // ── 화면 6: 설계 메인 (모바일) ──
-export function PlannerMobile({ P, memo, setMemo, onSave }) {
+export function PlannerMobile({ P, memo, setMemo, onSave, customer = CUST, categories = D.PLAN_CATEGORIES, agentComment = D.PLAN_AGENT_COMMENT }) {
   const [tab, setTab] = useS('all');
-  const cats = tab === 'all' ? D.PLAN_CATEGORIES : D.PLAN_CATEGORIES.filter(c => c.key === tab);
+  const cats = tab === 'all' ? categories : categories.filter(c => c.key === tab);
 
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--semantic-background-normal-alternative)' }}>
@@ -116,9 +125,9 @@ export function PlannerMobile({ P, memo, setMemo, onSave }) {
         <PhoneStatusBar dark />
         <div style={{ padding: '4px 20px 0' }}>
           <div style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.85 }}>{SERVICE_NAME}</div>
-          <h1 style={{ margin: '4px 0 0', fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em' }}>{CUST.maskedName}님 맞춤 보장 설계</h1>
+          <h1 style={{ margin: '4px 0 0', fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em' }}>{customer.maskedName}님 맞춤 보장 설계</h1>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
-            {[`${CUST.age}세 ${CUST.gender}`, `${CUST.maturity}·${CUST.payTerm}`, CUST.injuryGrade].map(t => (
+            {[`${customer.age}세 ${customer.gender}`, `${customer.maturity}·${customer.payTerm}`, customer.injuryGrade].map(t => (
               <span key={t} style={{ fontSize: 11.5, fontWeight: 600, padding: '4px 9px', borderRadius: 999, background: 'rgba(255,255,255,0.18)' }}>{t}</span>
             ))}
           </div>
@@ -131,7 +140,7 @@ export function PlannerMobile({ P, memo, setMemo, onSave }) {
       {/* Scroll body */}
       <div className="scroll" style={{ flex: 1, overflow: 'auto', padding: '14px 14px 14px' }}>
         {/* 설계사 코멘트 */}
-        <div style={{ marginBottom: 12 }}><AgentComment text={D.PLAN_AGENT_COMMENT} /></div>
+        <div style={{ marginBottom: 12 }}><AgentComment text={agentComment} /></div>
         {/* Summary card */}
         <div style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: 'var(--semantic-shadow-xsmall), inset 0 0 0 1px var(--semantic-line-normal-neutral)', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
@@ -194,7 +203,7 @@ export function DiffPillCompact({ P }) {
 }
 
 // ── 화면 7: 저장 완료 ──
-export function SavedScreen({ P, memo, onEdit, onClose }) {
+export function SavedScreen({ P, memo, onEdit, onClose, agentComment = D.PLAN_AGENT_COMMENT }) {
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--semantic-background-normal-normal)' }}>
       <PhoneStatusBar />
@@ -219,7 +228,7 @@ export function SavedScreen({ P, memo, onEdit, onClose }) {
           )}
         </div>
 
-        <div style={{ marginTop: 14 }}><AgentComment text={D.PLAN_AGENT_COMMENT} /></div>
+        <div style={{ marginTop: 14 }}><AgentComment text={agentComment} /></div>
 
         <div style={{ fontSize: 11.5, color: 'var(--semantic-label-assistive)', textAlign: 'center', margin: '16px 0 20px' }}>이 설계안은 2026.06.27까지 확인할 수 있어요</div>
 

@@ -44,19 +44,29 @@ export function ChangeBadge({ change }) {
   return <span style={{ display: 'inline-flex', padding: '3px 9px', borderRadius: 6, fontSize: 11.5, fontWeight: 700, background: map.bg, color: map.fg, whiteSpace: 'nowrap' }}>{m.label}</span>;
 }
 
-export function DetailScreen({ onBack, onNew, setToast }) {
+const DEFAULT_MEMO = '암 보장은 좀 더 키우고 싶고, 입원 일당이랑 16대 질병은 일단 빼주세요. 월 보험료는 4만 2천원 정도면 좋겠어요.';
+const DEFAULT_HISTORY = [
+  { t: '2시간 전', d: '2026.05.28 14:20', p: 42000, latest: true },
+  { t: '어제', d: '2026.05.27 21:08', p: 44200, latest: false },
+];
+
+export function DetailScreen({ onBack, onNew, setToast, label = '김OO 13세 어린이', status = 'saved',
+  cmpRows = CMP_ROWS, memo = DEFAULT_MEMO, history = DEFAULT_HISTORY, coverageMap,
+  onLogout, advisorName, advisorEmail }) {
   const [onlyChanged, setOnlyChanged] = useS(false);
   const [openRows, setOpenRows] = useS(() => new Set());
   const toggleRow = (id) => setOpenRows(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const baseTotal = CMP_ROWS.reduce((s, r) => s + r.baseP, 0);
-  const custTotal = CMP_ROWS.reduce((s, r) => s + r.custP, 0);
+  const baseTotal = cmpRows.reduce((s, r) => s + r.baseP, 0);
+  const custTotal = cmpRows.reduce((s, r) => s + r.custP, 0);
   const diff = custTotal - baseTotal;
-  const diffPct = ((diff / baseTotal) * 100).toFixed(1);
-  const rows = onlyChanged ? CMP_ROWS.filter(r => r.change !== 'keep') : CMP_ROWS;
+  const diffPct = baseTotal ? ((diff / baseTotal) * 100).toFixed(1) : '0.0';
+  const rows = onlyChanged ? cmpRows.filter(r => r.change !== 'keep') : cmpRows;
+  const covLookup = (id) => (coverageMap ? coverageMap[id] : (D.PLAN_COVERAGES.find(c => c.id === id))) || {};
+  const hasMemo = memo && String(memo).trim().length > 0;
 
   return (
     <div>
-      <AdminTopNav onNew={onNew} onHome={onBack} />
+      <AdminTopNav onNew={onNew} onHome={onBack} onLogout={onLogout} advisorName={advisorName} advisorEmail={advisorEmail} />
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '22px 28px 64px' }}>
         {/* Breadcrumb / header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
@@ -65,8 +75,8 @@ export function DetailScreen({ onBack, onNew, setToast }) {
               <Icon name="arrow-left" size={16} /> 목록으로
             </button>
             <Divider vertical style={{ height: 16 }} />
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em' }}>김OO 13세 어린이</h1>
-            <StatusBadge status="saved" />
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em' }}>{label}</h1>
+            <StatusBadge status={status} />
           </div>
           <Button size="small" variant="outlined" color="assistive" leadingContent={<Icon name="share" size={15} />} onClick={() => setToast({ msg: '고객 링크가 복사되었습니다', tone: 'success' })}>URL 복사</Button>
         </div>
@@ -97,7 +107,7 @@ export function DetailScreen({ onBack, onNew, setToast }) {
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--semantic-primary-strong)', marginBottom: 3 }}>고객 요청사항</div>
-            <div style={{ fontSize: 14, lineHeight: '22px', color: 'var(--semantic-label-normal)', textWrap: 'pretty' }}>“암 보장은 좀 더 키우고 싶고, 입원 일당이랑 16대 질병은 일단 빼주세요. 월 보험료는 4만 2천원 정도면 좋겠어요.”</div>
+            <div style={{ fontSize: 14, lineHeight: '22px', color: hasMemo ? 'var(--semantic-label-normal)' : 'var(--semantic-label-assistive)', textWrap: 'pretty' }}>{hasMemo ? `“${memo}”` : '남긴 요청사항이 없습니다'}</div>
           </div>
         </div>
 
@@ -114,7 +124,7 @@ export function DetailScreen({ onBack, onNew, setToast }) {
           </div>
           {rows.map((r, i) => {
             const ex = r.change === 'exclude';
-            const cov = D.PLAN_COVERAGES.find(c => c.id === r.id) || {};
+            const cov = covLookup(r.id);
             const open = openRows.has(r.id);
             return (
               <div key={i} style={{ borderBottom: i < rows.length - 1 ? '1px solid var(--semantic-line-solid-neutral)' : 'none' }}>
@@ -155,7 +165,7 @@ export function DetailScreen({ onBack, onNew, setToast }) {
         {/* Save history timeline */}
         <SectionTitle style={{ margin: '24px 0 10px' }}>저장 이력</SectionTitle>
         <div style={{ background: '#fff', borderRadius: 16, padding: '8px 20px', boxShadow: 'var(--semantic-shadow-xsmall), inset 0 0 0 1px var(--semantic-line-normal-neutral)' }}>
-          {[{ t: '2시간 전', d: '2026.05.28 14:20', p: 42000, latest: true }, { t: '어제', d: '2026.05.27 21:08', p: 44200, latest: false }].map((h, i, arr) => (
+          {history.map((h, i, arr) => (
             <div key={i} style={{ display: 'flex', gap: 14, padding: '14px 0', borderBottom: i < arr.length - 1 ? '1px solid var(--semantic-line-solid-neutral)' : 'none' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                 <div style={{ width: 11, height: 11, borderRadius: 999, background: h.latest ? 'var(--semantic-primary-normal)' : 'var(--semantic-line-normal-normal)', marginTop: 4 }} />

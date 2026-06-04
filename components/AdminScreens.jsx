@@ -11,7 +11,7 @@ import { LockIcon } from './CustomerScreens';
 const useS = useState;
 
 // ── Admin top nav ──
-export function AdminTopNav({ onNew, onHome }) {
+export function AdminTopNav({ onNew, onHome, onLogout, advisorName = '김설계', advisorEmail = 'planner@agency.co.kr' }) {
   const [menu, setMenu] = useS(false);
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 30, height: 60, background: 'var(--semantic-background-transparent-normal)', backdropFilter: 'blur(32px)', boxShadow: '0 1px 0 var(--semantic-line-normal-neutral)' }}>
@@ -29,11 +29,11 @@ export function AdminTopNav({ onNew, onHome }) {
           {menu && (
             <div style={{ position: 'absolute', top: 46, right: 0, width: 180, background: '#fff', borderRadius: 12, boxShadow: 'var(--semantic-shadow-large)', padding: 6, animation: 'pop .15s ease' }}>
               <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--semantic-line-solid-neutral)', marginBottom: 4 }}>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>김설계 설계사</div>
-                <div style={{ fontSize: 11.5, color: 'var(--semantic-label-alternative)' }}>planner@agency.co.kr</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{advisorName} 설계사</div>
+                <div style={{ fontSize: 11.5, color: 'var(--semantic-label-alternative)' }}>{advisorEmail}</div>
               </div>
               {['계정 설정', '로그아웃'].map(x => (
-                <div key={x} style={{ padding: '8px 10px', borderRadius: 8, fontSize: 13.5, cursor: 'pointer', color: x === '로그아웃' ? 'var(--semantic-status-negative)' : 'var(--semantic-label-normal)' }}
+                <div key={x} onClick={() => { if (x === '로그아웃' && onLogout) onLogout(); setMenu(false); }} style={{ padding: '8px 10px', borderRadius: 8, fontSize: 13.5, cursor: 'pointer', color: x === '로그아웃' ? 'var(--semantic-status-negative)' : 'var(--semantic-label-normal)' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--semantic-fill-alternative)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>{x}</div>
               ))}
@@ -46,15 +46,21 @@ export function AdminTopNav({ onNew, onHome }) {
 }
 
 // ── 화면 1: 로그인 ──
-export function LoginScreen({ onLogin }) {
-  const [email, setEmail] = useS('planner@agency.co.kr');
+export function LoginScreen({ onLogin, onAuth, defaultEmail = 'planner@agency.co.kr' }) {
+  const [email, setEmail] = useS(defaultEmail);
   const [pw, setPw] = useS('');
   const [show, setShow] = useS(false);
   const [err, setErr] = useS('');
   const [loading, setLoading] = useS(false);
-  function submit() {
+  async function submit() {
     if (!email || !pw || loading) return;
     setErr(''); setLoading(true);
+    if (onAuth) {
+      const e = await onAuth(email, pw);
+      setLoading(false);
+      if (e) setErr(e); else if (onLogin) onLogin();
+      return;
+    }
     setTimeout(() => { setLoading(false); if (pw === '0000') setErr('이메일 또는 비밀번호를 확인하세요.'); else onLogin(); }, 800);
   }
   return (
@@ -90,11 +96,10 @@ export function LoginScreen({ onLogin }) {
 }
 
 // ── 화면 2: 대시보드 ──
-export function DashboardScreen({ onNew, onOpen, setToast }) {
+export function DashboardScreen({ onNew, onOpen, setToast, plans = D.ADMIN_PLANS, hideManager = false, onLogout, advisorName, advisorEmail }) {
   const [q, setQ] = useS('');
   const [filter, setFilter] = useS('all');
   const [mgr, setMgr] = useS(false);
-  const plans = D.ADMIN_PLANS;
   const counts = { all: plans.length, sent: plans.filter(p => p.status === 'sent').length, viewed: plans.filter(p => p.status === 'viewed').length, saved: plans.filter(p => p.status === 'saved').length };
   let visible = plans;
   if (filter !== 'all') visible = visible.filter(p => p.status === filter);
@@ -109,11 +114,11 @@ export function DashboardScreen({ onNew, onOpen, setToast }) {
 
   return (
     <div>
-      <AdminTopNav onNew={onNew} onHome={() => {}} />
+      <AdminTopNav onNew={onNew} onHome={() => {}} onLogout={onLogout} advisorName={advisorName} advisorEmail={advisorEmail} />
       <div style={{ maxWidth: 1160, margin: '0 auto', padding: '28px 28px 64px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 18px' }}>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>내 설계안</h1>
-          <Button size="small" variant="outlined" color="assistive" leadingContent={<Icon name="book" size={16} />} onClick={() => setMgr(true)}>보장 설명 관리</Button>
+          {!hideManager && <Button size="small" variant="outlined" color="assistive" leadingContent={<Icon name="book" size={16} />} onClick={() => setMgr(true)}>보장 설명 관리</Button>}
         </div>
 
         {/* Stat cards */}

@@ -8,13 +8,13 @@ import { AmountField, LimitNote } from './Extras';
 
 const useS = useState, useR = useRef;
 
-export function usePlanner() {
-  const [items, setItems] = useS(() => D.PLAN_COVERAGES.map(c => ({ ...c })));
+export function usePlanner(coverages = D.PLAN_COVERAGES, discountRate = D.PLAN_DISCOUNT_RATE) {
+  const [items, setItems] = useS(() => coverages.map(c => ({ ...c })));
   const premiumOf = (c) => !c.on ? 0 : (c.fixedPremium != null ? c.fixedPremium : Math.round(c.amount * c.unit));
   const total = items.reduce((s, c) => s + premiumOf(c), 0);
-  const baseRef = useR(D.PLAN_COVERAGES.reduce((s, c) => s + (c.on ? (c.fixedPremium != null ? c.fixedPremium : Math.round(c.base * c.unit)) : 0), 0));
+  const baseRef = useR(coverages.reduce((s, c) => s + (c.on ? (c.fixedPremium != null ? c.fixedPremium : Math.round(c.base * c.unit)) : 0), 0));
   const base = baseRef.current;
-  const rate = D.PLAN_DISCOUNT_RATE;
+  const rate = discountRate;
   const general = Math.round(total / (1 - rate));
   const savings = general - total;
   const savingsPct = Math.round((savings / general) * 100);

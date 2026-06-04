@@ -12,23 +12,53 @@ WDS 디자인 시스템)을 **Next.js + React** 로 충실히 이식한 UI 구�
 |---|---|
 | 프레임워크 | Next.js 14 (App Router) |
 | UI | React 18, 인라인 스타일 + WDS CSS 토큰 (`lib/colors_and_type.css`) |
+| DB·인증 | **Supabase** (Postgres + Auth) — 프로젝트 `insu-suggest` (서울 리전) |
 | 폰트 | Pretendard (jsDelivr) |
 | 아이콘 | Wanted WDS 아이콘 (`lib/icons.js`) |
-
-> 데이터는 현재 **목(mock) 데이터**(`lib/data.js`)입니다. 기획서(PROJECT_PLAN)의
-> Supabase(DB·인증)·저장 API 연동은 다음 단계입니다.
 
 ## 실행
 
 ```bash
 npm install
+cp .env.example .env.local   # Supabase URL/anon key 입력
 npm run dev      # http://localhost:3000
 npm run build    # 프로덕션 빌드
 npm run start    # 프로덕션 서버
 ```
 
-홈(`/`)은 **화면 정의서 프로토타입 내비게이터**입니다. 좌측 레일에서 8개 화면을 전환하며
-확인할 수 있습니다.
+필수 환경변수 (`.env.local` / Vercel 프로젝트 설정):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://rqngzsmenridabrluvxt.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+```
+
+## 라우트 (실데이터)
+
+| 경로 | 설명 |
+|---|---|
+| `/login` | 설계사 로그인 (Supabase Auth) |
+| `/admin` | 대시보드 — 내 설계안 목록 (RLS로 본인 것만) |
+| `/admin/new` | 새 설계안 생성 → `create_plan` RPC, 고객 URL 발급 |
+| `/admin/[planId]` | 설계안 상세 — 원안 vs 고객안 비교, 메모, 저장 이력 |
+| `/p/[slug]` | 고객 페이지 — 인증 게이트 → 설계 조정 → 저장 (`get_plan_for_client`·`save_submission` RPC) |
+| `/preview` | **디자인 프로토타입 내비게이터** (목 데이터, 8개 화면 미리보기) |
+
+`/` 는 `/login` 으로 리다이렉트됩니다.
+
+### 데모 로그인
+
+- 설계사: `demo@insu.test` / `demo1234` (Supabase 시드)
+- 새 설계안 생성 시 인증 생년월일을 입력하면, 발급된 `/p/[slug]` 에서 그 값으로 진입.
+
+## 데이터 모델 (Supabase, PROJECT_PLAN §3)
+
+- `advisors` — Auth 사용자와 1:1 (신규 가입 시 트리거로 자동 생성).
+- `plans` — 설계안 1건. `access_code_hash`(bcrypt), `slug`(랜덤), `proposal_json`, `status(sent/viewed/saved)`.
+- `submissions` — 고객 저장 결과 (1:N), `state_json`·`total_premium`·`client_memo`.
+- **RLS**: 설계사는 본인 `advisor_id` 행만 접근. 고객은 테이블 직접 접근 불가 —
+  `SECURITY DEFINER` RPC(`create_plan`/`get_plan_for_client`/`save_submission`)로만,
+  내부에서 `access_code` 해시를 검증.
 
 ## 화면 구성 (UI_SPEC 8개 화면)
 

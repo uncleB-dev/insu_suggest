@@ -1,5 +1,6 @@
 'use client';
-/* 화면 3 — 새 설계안 생성 (입력 → 검증/미리보기 → 발급). 데스크탑. */
+/* 화면 3 — 새 설계안 생성 (입력 → 검증/미리보기 → 발급). 데스크탑.
+   onCreate 가 주어지면 실제 DB 생성, 없으면 미리보기(mock) 동작. */
 
 import React, { useState } from 'react';
 import { D } from '@/lib/data';
@@ -9,16 +10,34 @@ import { AdminTopNav } from './AdminScreens';
 
 const useS = useState;
 
+// 정식 proposal_json 예시 (고객 설계 페이지가 그대로 렌더링하는 형태)
 const SAMPLE_JSON = `{
-  "customer": { "label": "김OO 13세 어린이", "age": 13, "gender": "F" },
-  "product": "(무)퍼펙트 어린이보장보험 2종",
-  "base": 8000,
+  "customer": {
+    "maskedName": "김*아", "age": 13, "gender": "여",
+    "maturity": "80세 만기", "payTerm": "20년 납",
+    "injuryGrade": "상해 1급", "product": "(무)퍼펙트 어린이보장보험 2종"
+  },
+  "discountRate": 0.12,
+  "categories": [
+    { "key": "cancer", "label": "암" },
+    { "key": "injury", "label": "상해" },
+    { "key": "waiver", "label": "납입면제" }
+  ],
   "coverages": [
-    { "name": "암진단비(유사암 제외)", "amount": 5000, "premium": 5000, "why": "진단 시 목돈 보장" },
-    { "name": "골절 진단비", "amount": 30, "premium": 1500, "why": "활동기 골절 대비" },
-    { "name": "보험료 납입면제", "amount": null, "premium": 1500, "why": "면제 사유 시 보장 유지" }
+    { "id": "c1", "cat": "cancer", "name": "암진단비 (유사암 제외)", "amount": 5000, "base": 5000, "min": 1000, "max": 10000, "step": 1000, "unit": 3.0, "on": true,
+      "why": "진단 시 목돈을 한 번에 받아 치료비·생활비 공백을 메웁니다.", "how": "보장 대상 암 최초 진단 확정 시 가입금액 전액을 지급합니다.",
+      "limitNote": "업계 암 진단비 합산 한도로 이 금액 이상은 가입이 어려울 수 있어요." },
+    { "id": "c6", "cat": "injury", "name": "상해후유장해 (3~100%)", "amount": 10000, "base": 10000, "min": 5000, "max": 10000, "step": 1000, "unit": 0.3, "on": true, "required": true,
+      "why": "사고 후유장해를 장해율에 비례해 보장하는 핵심 담보입니다.", "how": "상해로 후유장해 발생 시 가입금액 × 장해지급률을 지급합니다." },
+    { "id": "c13", "cat": "waiver", "name": "보험료 납입면제 (특약)", "amount": null, "fixedPremium": 1200, "on": true, "required": true,
+      "why": "면제 사유 발생 시 이후 보험료를 면제해 보장을 지켜줍니다.", "how": "약관상 면제 사유 발생 시 차회 이후 보험료 납입을 면제합니다." }
   ]
 }`;
+
+function premiumOf(c) {
+  if (!c.on) return 0;
+  return c.fixedPremium != null ? c.fixedPremium : Math.round((c.amount || 0) * (c.unit || 0));
+}
 
 export function validatePlan(raw) {
   const checks = [];
@@ -29,25 +48,37 @@ export function validatePlan(raw) {
   const errors = [];
   const has = (c, k) => c && c[k] !== undefined && c[k] !== null && c[k] !== '';
   const cov = Array.isArray(data.coverages) ? data.coverages : [];
-  // structural checks
-  checks.push({ label: '고객 정보(customer.label) 존재', ok: has(data.customer, 'label') });
+  const cats = Array.isArray(data.categories) ? data.categories : [];
+
+  checks.push({ label: '고객 정보(customer.maskedName) 존재', ok: has(data.customer, 'maskedName') });
+  checks.push({ label: `카테고리 ${cats.length}개 인식`, ok: cats.length > 0 });
   checks.push({ label: `담보 ${cov.length}개 인식`, ok: cov.length > 0 });
-  checks.push({ label: 'base 보험료 숫자 확인', ok: typeof data.base === 'number' });
-  if (!has(data.customer, 'label')) errors.push('필수 필드 누락: customer.label');
+
+  if (!has(data.customer, 'maskedName')) errors.push('필수 필드 누락: customer.maskedName');
+  if (!cats.length) errors.push('카테고리(categories)가 비어 있습니다.');
   if (!cov.length) errors.push('담보(coverages)가 비어 있습니다.');
-  // field-level
+
   cov.forEach((c, i) => {
     if (!has(c, 'name')) errors.push(`필수 필드 누락: coverages[${i}].name`);
     if (!has(c, 'why')) errors.push(`필수 필드 누락: coverages[${i}].why`);
-    if (typeof c.premium !== 'number') errors.push(`보험료 형식 오류: coverages[${i}].premium`);
+    const priced = typeof c.fixedPremium === 'number' || (typeof c.amount === 'number' && typeof c.unit === 'number');
+    if (!priced) errors.push(`보험료 산정 정보 누락: coverages[${i}] (fixedPremium 또는 amount+unit)`);
   });
-  checks.push({ label: '담보별 필수 필드(name·why·premium)', ok: cov.every(c => has(c, 'name') && has(c, 'why') && typeof c.premium === 'number') });
-  // sum check
-  const sum = cov.reduce((s, c) => s + (typeof c.premium === 'number' ? c.premium : 0), 0);
-  const sumOk = typeof data.base === 'number' && sum === data.base;
-  checks.push({ label: `보험료 합계 일치 (담보 합 ${sum.toLocaleString()} = base ${(data.base || 0).toLocaleString()})`, ok: sumOk });
-  if (typeof data.base === 'number' && !sumOk) errors.push(`보험료 합계 불일치: 담보 합 ${sum.toLocaleString()} ≠ base ${data.base.toLocaleString()}`);
-  return { ok: errors.length === 0, parseError: false, checks, errors, data, sum };
+  const priceOk = cov.every(c => typeof c.fixedPremium === 'number' || (typeof c.amount === 'number' && typeof c.unit === 'number'));
+  checks.push({ label: '담보별 필수 필드(name·why·보험료)', ok: cov.length > 0 && cov.every(c => has(c, 'name') && has(c, 'why')) && priceOk });
+
+  const base = cov.reduce((s, c) => s + premiumOf(c), 0);
+  return { ok: errors.length === 0, parseError: false, checks, errors, data, base };
+}
+
+function genSlug() {
+  // 추측 불가능한 랜덤 토큰 (12자)
+  const a = '0123456789abcdefghijklmnopqrstuvwxyz';
+  let s = '';
+  const r = (typeof crypto !== 'undefined' && crypto.getRandomValues)
+    ? crypto.getRandomValues(new Uint32Array(12)) : null;
+  for (let i = 0; i < 12; i++) s += a[(r ? r[i] : Math.floor(Math.random() * 1e9)) % a.length];
+  return s;
 }
 
 export function Stepper({ step }) {
@@ -74,7 +105,7 @@ export function Stepper({ step }) {
   );
 }
 
-export function NewPlanScreen({ onBack, onDone, setToast }) {
+export function NewPlanScreen({ onBack, onDone, setToast, onCreate }) {
   const [step, setStep] = useS(1);
   const [json, setJson] = useS(SAMPLE_JSON);
   const [label, setLabel] = useS('김OO 13세 어린이');
@@ -86,12 +117,43 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
   const [cFocus, setCFocus] = useS(false);
   const [result, setResult] = useS(null);
   const [focus, setFocus] = useS(false);
+  const [creating, setCreating] = useS(false);
+  const [issuedUrl, setIssuedUrl] = useS('https://plan.simul.co.kr/p/k3x9q2');
+  const [createErr, setCreateErr] = useS('');
+
+  const accessValue = authType === 'birth' ? birth : code;
 
   function runValidate() {
     const r = validatePlan(json);
     setResult(r);
     setStep(2);
   }
+
+  async function generate() {
+    if (!result || !result.ok) return;
+    setCreateErr('');
+    if (onCreate) {
+      setCreating(true);
+      const slug = genSlug();
+      const res = await onCreate({
+        label: label.trim(), slug, accessCode: accessValue, authType,
+        proposalJson: result.data, comment: comment.trim(),
+      });
+      setCreating(false);
+      if (res && res.error) { setCreateErr(res.error); return; }
+      setIssuedUrl(res.url);
+      setStep(3);
+    } else {
+      // 미리보기(mock)
+      D.PLAN_AGENT_COMMENT = comment;
+      D.PLAN_AUTH = { type: authType, value: accessValue };
+      setStep(3);
+    }
+  }
+
+  const guideText = authType === 'birth'
+    ? `안녕하세요. 맞춤 보장 설계안을 보내드립니다. 아래 링크에서 생년월일 6자리를 입력하시면 확인하실 수 있어요.\n${issuedUrl}`
+    : `안녕하세요. 맞춤 보장 설계안을 보내드립니다. 아래 링크에서 접속 코드(${code})를 입력하시면 확인하실 수 있어요.\n${issuedUrl}`;
 
   return (
     <div>
@@ -114,7 +176,7 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
                     boxShadow: focus ? 'inset 0 0 0 2px rgba(0,102,255,0.43)' : 'inset 0 0 0 1px var(--semantic-line-normal-neutral)', transition: 'box-shadow .15s ease', whiteSpace: 'pre' }} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 12.5, color: 'var(--semantic-label-alternative)' }}>
-                <Icon name="bulb" size={15} /> Claude Desktop에서 변환한 제안서 JSON을 붙여넣으세요. 파일을 드래그해 업로드할 수도 있어요.
+                <Icon name="bulb" size={15} /> Claude Desktop에서 변환한 제안서 JSON을 붙여넣으세요. 고객 페이지가 그대로 렌더링합니다.
               </div>
             </div>
 
@@ -131,7 +193,6 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
                 <AuthOption active={authType === 'code'} onClick={() => setAuthType('code')} title="별도 접속 코드" desc="6자리 코드 자동 발급" />
               </div>
 
-              {/* 설계사가 인증 값을 직접 입력 — JSON에는 저장하지 않음 */}
               {authType === 'birth' ? (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -176,7 +237,6 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
 
         {step === 2 && result && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* validation result */}
             <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: 'var(--semantic-shadow-xsmall), inset 0 0 0 1px var(--semantic-line-normal-neutral)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <div style={{ width: 24, height: 24, borderRadius: 999, background: result.ok ? 'var(--atomic-green-50)' : 'var(--semantic-status-negative)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -205,18 +265,17 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
               )}
             </div>
 
-            {/* preview when ok */}
             {result.ok && (
               <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: 'var(--semantic-shadow-xsmall), inset 0 0 0 1px var(--semantic-line-normal-neutral)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--semantic-label-alternative)', marginBottom: 12 }}>미리보기</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                   <div>
                     <div style={{ fontSize: 18, fontWeight: 700 }}>{label}</div>
-                    <div style={{ fontSize: 13, color: 'var(--semantic-label-alternative)', marginTop: 2 }}>{result.data.product || '상품명 미지정'}</div>
+                    <div style={{ fontSize: 13, color: 'var(--semantic-label-alternative)', marginTop: 2 }}>{result.data.customer.product || '상품명 미지정'}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 11.5, color: 'var(--semantic-label-alternative)' }}>월 보험료(참고)</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{D.fmtWon(result.data.base)}원</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{D.fmtWon(result.base)}원</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 0 }}>
@@ -224,7 +283,7 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
                   <Divider vertical />
                   <Stat value={`${result.data.customer.age}세`} label="나이" />
                   <Divider vertical />
-                  <Stat value={result.data.customer.gender === 'F' ? '여' : '남'} label="성별(마스킹)" />
+                  <Stat value={result.data.customer.gender || '—'} label="성별(마스킹)" />
                 </div>
                 {comment.trim() && (
                   <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--semantic-line-solid-neutral)' }}>
@@ -235,9 +294,15 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
               </div>
             )}
 
+            {createErr && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--semantic-status-negative)' }}>
+                <Icon name="close" size={15} /> {createErr}
+              </div>
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <Button variant="outlined" color="assistive" size="large" onClick={() => setStep(1)}>수정</Button>
-              <Button size="large" disabled={!result.ok} onClick={() => { D.PLAN_AGENT_COMMENT = comment; D.PLAN_AUTH = { type: authType, value: authType === 'birth' ? birth : code }; setStep(3); }}>이대로 생성</Button>
+              <Button size="large" disabled={!result.ok || creating} onClick={generate}>{creating ? '생성 중…' : '이대로 생성'}</Button>
             </div>
           </div>
         )}
@@ -252,17 +317,15 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
               <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--semantic-label-alternative)' }}>아래 링크를 고객에게 전달하세요.</p>
             </div>
 
-            <CopyField label="고객 접속 URL" value="https://plan.simul.co.kr/p/k3x9q2" onCopy={() => setToast({ msg: '고객 링크가 복사되었습니다', tone: 'success' })} mono />
+            <CopyField label="고객 접속 URL" value={issuedUrl} onCopy={() => copy(issuedUrl, setToast, '고객 링크가 복사되었습니다')} mono />
             <div style={{ background: 'rgba(0,102,255,0.05)', borderRadius: 12, padding: 14, boxShadow: 'inset 0 0 0 1px rgba(0,102,255,0.14)', display: 'flex', gap: 9 }}>
               <Icon name="bulb" size={16} color="var(--semantic-primary-normal)" style={{ marginTop: 1, flexShrink: 0 }} />
               <div style={{ fontSize: 13, lineHeight: '20px', color: 'var(--semantic-label-neutral)' }}>{authType === 'birth' ? <>접속 방법: 고객이 링크 접속 후 <b>생년월일 6자리(YYMMDD)</b>를 입력하면 설계안이 열립니다.</> : <>접속 방법: 고객이 링크 접속 후 <b>접속 코드 {code}</b>를 입력하면 설계안이 열립니다.</>}</div>
             </div>
-            <CopyField label="고객 안내 문구 (복사용)" value={authType === 'birth'
-              ? '안녕하세요. 맞춤 보장 설계안을 보내드립니다. 아래 링크에서 생년월일 6자리를 입력하시면 확인하실 수 있어요.\nhttps://plan.simul.co.kr/p/k3x9q2'
-              : `안녕하세요. 맞춤 보장 설계안을 보내드립니다. 아래 링크에서 접속 코드(${code})를 입력하시면 확인하실 수 있어요.\nhttps://plan.simul.co.kr/p/k3x9q2`} onCopy={() => setToast({ msg: '안내 문구가 복사되었습니다', tone: 'success' })} multiline />
+            <CopyField label="고객 안내 문구 (복사용)" value={guideText} onCopy={() => copy(guideText, setToast, '안내 문구가 복사되었습니다')} multiline />
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <Button variant="outlined" color="assistive" size="large" onClick={() => setToast({ msg: '고객 링크가 복사되었습니다', tone: 'success' })}>URL 복사</Button>
+              <Button variant="outlined" color="assistive" size="large" onClick={() => copy(issuedUrl, setToast, '고객 링크가 복사되었습니다')}>URL 복사</Button>
               <Button size="large" onClick={onDone}>대시보드로</Button>
             </div>
           </div>
@@ -270,6 +333,11 @@ export function NewPlanScreen({ onBack, onDone, setToast }) {
       </div>
     </div>
   );
+}
+
+function copy(text, setToast, msg) {
+  try { navigator.clipboard && navigator.clipboard.writeText(text); } catch {}
+  setToast && setToast({ msg, tone: 'success' });
 }
 
 function LockMini() {
